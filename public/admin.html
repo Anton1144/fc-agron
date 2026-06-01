@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель адміністратора - ФК Агрон</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { display: flex; height: 100vh; background-color: #f1f5f9; color: #334155; }
+        
+        /* Бокове меню */
+        .sidebar { width: 250px; background-color: #1e293b; color: white; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; font-size: 20px; font-weight: bold; color: #3b82f6; text-align: center; border-bottom: 1px solid #334155; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .nav-links { list-style: none; padding: 20px 0; }
+        .nav-links li { padding: 15px 20px; cursor: pointer; transition: 0.3s; }
+        .nav-links li:hover, .nav-links li.active { background-color: #334155; border-left: 4px solid #3b82f6; }
+        .nav-links a { color: white; text-decoration: none; display: block; }
+        
+        /* Основна частина */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .topbar { background-color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .logout-btn { color: #ef4444; text-decoration: none; font-weight: bold; }
+        
+        .content-area { padding: 30px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .form-group { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+        input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 5px; flex: 1; min-width: 150px; }
+        .btn-primary { background-color: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-primary:hover { background-color: #2563eb; }
+        
+        .match-card { display: flex; justify-content: space-between; padding: 15px; background-color: #f8fafc; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid #3b82f6; align-items: center; }
+        .btn-delete { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 16px; }
+        .mt-20 { margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="logo.png" alt="" style="height: 30px;" onerror="this.style.display='none'"> 
+            ФК Агрон
+        </div>
+        <ul class="nav-links">
+            <li class="active"><a href="#" id="nav-matches">⚽ Матчі</a></li>
+            <li><a href="#" id="nav-players">🏃 Склад команди</a></li>
+            <li><a href="#" id="nav-teams">🏆 Турнірна таблиця</a></li>
+            <li><a href="#" id="nav-schedules">📅 Розклад матчів</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="topbar">
+            <h2 id="page-title">Управління матчами</h2>
+            <div>
+                <span>Адміністратор | </span>
+                <a href="/login.html" class="logout-btn">Вийти 🚪</a>
+            </div>
+        </div>
+
+        <div class="content-area">
+            
+            <div id="matches-section">
+                <div class="card">
+                    <h3>Додати результат матчу</h3>
+                    <form id="matchForm">
+                        <div class="form-group">
+                            <input type="text" id="homeTeam" placeholder="Господарі" required>
+                            <input type="text" id="awayTeam" placeholder="Гості" required>
+                            <input type="text" id="score" placeholder="Рахунок (напр. 2:1)" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Зберегти матч</button>
+                    </form>
+                </div>
+                <div class="card mt-20">
+                    <h3>Останні зіграні матчі</h3>
+                    <div id="matchesList"></div>
+                </div>
+            </div>
+
+            <div id="players-section" style="display: none;">
+                <div class="card">
+                    <h3>Додати гравця</h3>
+                    <form id="playerForm">
+                        <div class="form-group">
+                            <input type="number" id="playerNumber" placeholder="Номер" required>
+                            <input type="text" id="playerName" placeholder="Прізвище та Ім'я" required>
+                            <input type="text" id="playerPosition" placeholder="Позиція (напр. Нападник)" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Зберегти гравця</button>
+                    </form>
+                </div>
+                <div class="card mt-20">
+                    <h3>Поточний склад команди</h3>
+                    <div id="playersList"></div>
+                </div>
+            </div>
+
+            <div id="teams-section" style="display: none;">
+                <div class="card">
+                    <h3>Додати команду в таблицю</h3>
+                    <form id="teamForm">
+                        <div class="form-group">
+                            <input type="text" id="teamName" placeholder="Назва команди" required>
+                            <input type="number" id="teamGames" placeholder="Ігри" required>
+                            <input type="number" id="teamWins" placeholder="В" required>
+                            <input type="number" id="teamDraws" placeholder="Н" required>
+                            <input type="number" id="teamLosses" placeholder="П" required>
+                            <input type="number" id="teamPoints" placeholder="Очки" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Зберегти команду</button>
+                    </form>
+                </div>
+                <div class="card mt-20">
+                    <h3>Поточне положення команд</h3>
+                    <div id="teamsList"></div>
+                </div>
+            </div>
+
+            <div id="schedules-section" style="display: none;">
+                <div class="card">
+                    <h3>Додати майбутній матч</h3>
+                    <form id="scheduleForm">
+                        <div class="form-group">
+                            <input type="text" id="schHome" placeholder="Господарі" required>
+                            <input type="text" id="schAway" placeholder="Гості" required>
+                            <input type="text" id="schDate" placeholder="Дата (напр. 30 Травня)" required>
+                            <input type="text" id="schTime" placeholder="Час (напр. 17:00)" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Зберегти в розклад</button>
+                    </form>
+                </div>
+                <div class="card mt-20">
+                    <h3>Заплановані ігри</h3>
+                    <div id="schedulesList"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="script.js"></script>
+</body>
+</html>

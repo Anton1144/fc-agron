@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Вхід в Адмін-панель</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #1e293b; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 100%; max-width: 350px; text-align: center; }
+        .login-card h2 { margin-bottom: 20px; color: #1e293b; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        button { width: 100%; padding: 12px; background-color: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        button:hover { background-color: #2563eb; }
+        .error { color: #ef4444; margin-bottom: 15px; display: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h2>ФК Агрон - Вхід</h2>
+        <div id="error-msg" class="error">Невірний логін або пароль!</div>
+        
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Логін (введіть admin)" required>
+            <input type="password" id="password" placeholder="Пароль (введіть admin123)" required>
+            <button type="submit">Увійти в систему</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+
+            // Відправляємо дані на наш бекенд
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: u, password: p })
+            });
+
+            if (response.ok) {
+                // Якщо сервер сказав "ОК", записуємо "ключ" у браузер і пускаємо в адмінку
+                localStorage.setItem('isAdmin', 'true');
+                window.location.href = '/admin.html';
+            } else {
+                // Якщо пароль неправильний - показуємо помилку
+                document.getElementById('error-msg').style.display = 'block';
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e293b">
+    <title>Офіційний сайт - ФК Агрон</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        /* CSS-ЗМІННІ ДЛЯ СВІТЛОЇ ТА ТЕМНОЇ ТЕМИ */
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #334155;
+            --text-muted: #64748b;
+            --header-bg: #1e293b;
+            --card-bg: white;
+            --border-color: #cbd5e1;
+            --badge-bg: #eff6ff;
+            --card-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .dark-mode {
+            --bg-color: #0f172a;
+            --text-color: #f1f5f9;
+            --text-muted: #94a3b8;
+            --header-bg: #020617;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --badge-bg: #334155;
+            --card-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        /* Базові налаштування */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s, color 0.3s; }
+        body { background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* Шапка та Навігація */
+        header { background-color: var(--header-bg); color: white; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .logo { font-size: 24px; color: #3b82f6; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+        
+        .public-nav { display: flex; gap: 20px; }
+        .nav-btn { color: #cbd5e1; text-decoration: none; font-size: 16px; font-weight: bold; cursor: pointer; padding: 5px 10px; border-radius: 5px; transition: 0.3s; }
+        .nav-btn:hover, .nav-btn.active { color: white; background-color: rgba(255, 255, 255, 0.1); }
+
+        .login-btn { text-decoration: none; background-color: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 8px 16px; border-radius: 6px; font-weight: bold; border: 1px solid #3b82f6; transition: 0.3s; }
+        .login-btn:hover { background-color: #3b82f6; color: white; }
+        
+        #theme-toggle { background: none; border: none; font-size: 22px; cursor: pointer; padding: 5px; transition: 0.3s; }
+        #theme-toggle:hover { transform: scale(1.1); }
+
+        /* Головний банер */
+        .hero { background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)), url('https://images.unsplash.com/photo-1518605368461-1ee7c532066d?auto=format&fit=crop&q=80') center/cover; color: white; text-align: center; padding: 80px 20px; }
+        .hero h2 { font-size: 42px; margin-bottom: 10px; }
+        .hero p { font-size: 18px; color: #cbd5e1; }
+
+        /* Контейнер */
+        .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; flex: 1; width: 100%; }
+        .section-title { text-align: center; margin-bottom: 40px; font-size: 28px; color: var(--text-color); text-transform: uppercase; }
+        .section-title span { border-bottom: 3px solid #3b82f6; padding-bottom: 5px; }
+
+        /* Секції */
+        .page-section { display: none; animation: fadeIn 0.5s; }
+        .page-section.active-section { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Картки та Сітка */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 60px; }
+        .card { background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: var(--card-shadow); text-align: center; border-top: 4px solid #3b82f6; transition: transform 0.3s, background-color 0.3s; }
+        .card:hover { transform: translateY(-5px); }
+        
+        .match-teams { font-size: 18px; font-weight: bold; color: var(--text-color); }
+        .match-vs { color: var(--text-muted); font-size: 14px; margin: 5px 0; display: block; font-weight: normal; }
+        .score-badge { display: inline-block; background-color: var(--badge-bg); color: #3b82f6; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 1.2em; margin-top: 15px; border: 1px solid var(--border-color); }
+
+        .player-number { font-size: 32px; font-weight: bold; color: var(--border-color); display: block; margin-bottom: 5px; }
+        .player-name { font-size: 20px; font-weight: bold; color: var(--text-color); }
+        .player-pos { color: var(--text-muted); font-size: 15px; margin-top: 5px; background: var(--bg-color); display: inline-block; padding: 4px 12px; border-radius: 15px; border: 1px solid var(--border-color); }
+
+        /* Таблиця */
+        table th { border-bottom: 2px solid var(--border-color); color: var(--text-muted); }
+        table td { border-bottom: 1px solid var(--border-color); color: var(--text-color); }
+        .table-row:hover { background-color: var(--badge-bg); }
+
+        /* Підвал */
+        footer { text-align: center; padding: 25px; background-color: #0f172a; color: #64748b; margin-top: auto; }
+        /* ==========================================
+           МОБІЛЬНА АДАПТАЦІЯ (АДАПТИВНИЙ ДИЗАЙН)
+           ========================================== */
+        @media (max-width: 768px) {
+            /* Перебудовуємо шапку: елементи один під одним */
+            header { flex-direction: column; padding: 15px 10px; gap: 15px; text-align: center; }
+            
+            /* Кнопки меню робимо компактнішими і дозволяємо переноситись на новий рядок */
+            .public-nav { flex-wrap: wrap; justify-content: center; gap: 10px; }
+            .nav-btn { font-size: 14px; padding: 5px 8px; }
+            
+            /* Зменшуємо шрифти на головному банері */
+            .hero { padding: 40px 15px; }
+            .hero h2 { font-size: 28px; }
+            .hero p { font-size: 15px; }
+            
+            /* Зменшуємо відступи по краях екрана */
+            .container { margin: 20px auto; padding: 0 10px; }
+            .section-title { font-size: 22px; margin-bottom: 25px; }
+            
+            /* Картки робимо трохи меншими */
+            .card { padding: 15px; }
+            .grid { gap: 15px; }
+            
+            /* Робимо так, щоб таблиця вільно скролилася вбік і не ламала сайт */
+            table { font-size: 14px; }
+            table th, table td { padding: 10px 5px !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo" style="display: flex; align-items: center; gap: 12px;">
+            <img src="logo.png" alt="Емблема" style="height: 45px; width: auto;" onerror="this.style.display='none'">
+            ФК Агрон
+        </div>
+        <nav class="public-nav">
+            <div class="nav-btn active" data-target="home">Про клуб</div>
+            <div class="nav-btn" data-target="stadium">Домашній стадіон</div>
+            <div class="nav-btn" data-target="matches">Розклад та результати</div>
+            <div class="nav-btn" data-target="players">Склад команди</div>
+            <div class="nav-btn" data-target="standings">Турнірна таблиця</div>
+        </nav>
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <button id="theme-toggle" title="Змінити тему">🌙</button>
+            <a href="/login.html" class="login-btn">Панель управління</a>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h2>Офіційний портал ФК Агрон</h2>
+        <p>Слідкуйте за улюбленою командою у реальному часі</p>
+    </section>
+
+    <div class="container">
+        
+        <div id="home" class="page-section active-section">
+            <h2 class="section-title"><span>Історія та цінності</span></h2>
+            <div class="card" style="border-left: 5px solid #3b82f6; border-top: none; text-align: left; line-height: 1.8; font-size: 16px;">
+                <p style="margin-bottom: 15px;"><strong>Футбольний клуб «Агрон»</strong> — це амбітна аматорська команда, яка об'єднує справжніх фанатів футболу. Наша мета — не лише перемагати на футбольному полі, але й розвивати спортивний дух, дисципліну та командну роботу.</p>
+                <p>Цей офіційний портал створено для того, щоб наші вболівальники завжди були в курсі останніх подій. Обирайте потрібний розділ у меню зверху, щоб переглянути розклад матчів, поточні результати або детальний ростер наших гравців. Ми граємо для вас!</p>
+            </div>
+
+            <h2 class="section-title" style="margin-top: 50px;"><span>Підтримати команду</span></h2>
+            <div class="card" style="border-top: 4px solid #10b981;">
+                <h3 style="color: var(--text-color); margin-bottom: 10px;">Офіційний фонд розвитку клубу</h3>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">Ваша підтримка допомагає нам купувати інвентар, орендувати поля та розвивати молодіжний склад.</p>
+                <div style="background: var(--bg-color); padding: 20px; border-radius: 8px; display: inline-block; text-align: left; border: 1px solid var(--border-color);">
+                    <p style="margin-bottom: 8px;"><strong>Банк:</strong> ПриватБанк / Monobank</p>
+                    <p style="margin-bottom: 8px;"><strong>Отримувач:</strong> ГО "ФК Агрон"</p>
+                    <div style="margin-top: 15px; display: flex; align-items: center; gap: 15px; background: var(--card-bg); padding: 10px 15px; border-radius: 5px; border: 1px dashed #3b82f6;">
+                        <span id="cardNumber" style="font-size: 1.2em; font-weight: bold; letter-spacing: 2px;">4149 4993 1234 5678</span>
+                        <button onclick="copyCard()" style="background: #10b981; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s;">Копіювати</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="stadium" class="page-section">
+            <h2 class="section-title"><span>Наша домашня арена</span></h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+                <div class="card" style="text-align: left; padding: 20px;">
+                    <img src="stadium.jpg" alt="Стадіон" onerror="this.src='https://images.unsplash.com/photo-1574629810360-7efbb22bcea0?auto=format&fit=crop&q=80'" style="width: 100%; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color);">
+                    <h3 style="color: var(--text-color); margin-bottom: 10px;">Стадіон с. Великі Гаї</h3>
+                    <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 10px;">Домашні матчі ФК «Агрон» проводить на сучасному затишному стадіоні у селі Великі Гаї, Тернопільської області.</p>
+                    <p style="color: var(--text-muted); line-height: 1.6;">Поле оснащене якісним натуральним газоном, а трибуни завжди збирають палких вболівальників. Чекаємо вас на трибунах!</p>
+                </div>
+                <div class="card" style="padding: 10px; display: flex; flex-direction: column;">
+                    <div id="stadium-map" style="flex: 1; min-height: 350px; border-radius: 8px; z-index: 1;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="matches" class="page-section">
+            <h2 class="section-title"><span>Майбутні матчі</span></h2>
+            <div id="public-schedules" class="grid" style="margin-bottom: 50px;"></div>
+
+            <h2 class="section-title"><span>Останні результати</span></h2>
+            <div id="public-matches" class="grid"></div>
+        </div>
+
+        <div id="players" class="page-section">
+            <h2 class="section-title"><span>Наш ростер</span></h2>
+            
+            <div style="text-align: center; margin-bottom: 30px;">
+                <input type="text" id="playerSearch" placeholder="🔍 Пошук гравця за прізвищем..." 
+                       style="padding: 12px 20px; width: 100%; max-width: 400px; border-radius: 25px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); font-size: 16px; outline: none; box-shadow: var(--card-shadow); transition: 0.3s;">
+            </div>
+
+            <div id="public-players" class="grid"></div>
+        </div>
+
+        <div id="standings" class="page-section">
+            <h2 class="section-title"><span>Турнірна таблиця ліги</span></h2>
+            <div class="card" style="overflow-x: auto; padding: 10px;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 15px;">#</th>
+                            <th style="padding: 15px;">Команда</th>
+                            <th style="padding: 15px;">І</th>
+                            <th style="padding: 15px;">В</th>
+                            <th style="padding: 15px;">Н</th>
+                            <th style="padding: 15px;">П</th>
+                            <th style="padding: 15px;">О</th>
+                        </tr>
+                    </thead>
+                    <tbody id="public-teams"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Інформаційна система ФК Агрон. Усі права захищено.</p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // --- 1. ТЕМНА ТЕМА ---
+        const themeToggle = document.getElementById('theme-toggle');
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeToggle.innerText = '☀️';
+        }
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+                themeToggle.innerText = '☀️';
+            } else {
+                localStorage.setItem('theme', 'light');
+                themeToggle.innerText = '🌙';
+            }
+        });
+
+        // --- 2. КОПІЮВАННЯ КАРТКИ ---
+        function copyCard() {
+            const cardNumber = document.getElementById('cardNumber').innerText;
+            navigator.clipboard.writeText(cardNumber).then(() => {
+                alert('Номер картки успішно скопійовано!');
+            });
+        }
+
+        // --- 3. ІНІЦІАЛІЗАЦІЯ КАРТИ ---
+        let mapInitialized = false;
+        function initStadiumMap() {
+            if (mapInitialized) return; 
+            
+            const map = L.map('stadium-map').setView([49.5298, 25.6385], 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+
+            L.marker([49.5298, 25.6385]).addTo(map)
+                .bindPopup('<b>Стадіон ФК Агрон</b><br>с. Великі Гаї, Тернопільська обл.')
+                .openPopup();
+                
+            mapInitialized = true;
+        }
+
+        // --- 4. ПЕРЕМИКАННЯ МЕНЮ ---
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const sections = document.querySelectorAll('.page-section');
+
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                navBtns.forEach(b => b.classList.remove('active'));
+                sections.forEach(s => s.classList.remove('active-section'));
+                btn.classList.add('active');
+                
+                const targetId = btn.getAttribute('data-target');
+                document.getElementById(targetId).classList.add('active-section');
+
+                if(targetId === 'stadium') {
+                    setTimeout(initStadiumMap, 100);
+                }
+            });
+        });
+
+        // --- 5. ЖИВИЙ ПОШУК ТА ЗАВАНТАЖЕННЯ ГРАВЦІВ ---
+        let allPlayers = []; 
+
+        async function loadPlayers() {
+            const res = await fetch('/api/players');
+            allPlayers = await res.json();
+            renderPlayers(allPlayers); 
+        }
+
+        function renderPlayers(playersToRender) {
+            const container = document.getElementById('public-players');
+            container.innerHTML = playersToRender.length ? '' : '<p style="text-align:center; grid-column: 1 / -1; color: var(--text-muted);">Гравців не знайдено.</p>';
+            
+            playersToRender.forEach(p => {
+                container.innerHTML += `<div class="card"><span class="player-number">#${p.number}</span><div class="player-name">${p.name}</div><div class="player-pos">${p.position}</div></div>`;
+            });
+        }
+
+        document.getElementById('playerSearch').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredPlayers = allPlayers.filter(p => p.name.toLowerCase().includes(searchTerm));
+            renderPlayers(filteredPlayers); 
+        });
+
+        // --- 6. ЗАВАНТАЖЕННЯ ІНШИХ ДАНИХ З БД ---
+        async function loadMatches() {
+            const res = await fetch('/api/matches');
+            const matches = await res.json();
+            const container = document.getElementById('public-matches');
+            container.innerHTML = matches.length ? '' : '<p style="text-align:center; grid-column: 1 / -1; color: var(--text-muted);">Матчів поки немає.</p>';
+            matches.forEach(m => {
+                container.innerHTML += `<div class="card"><div class="match-teams">${m.homeTeam} <span class="match-vs">vs</span> ${m.awayTeam}</div><div class="score-badge">${m.score}</div></div>`;
+            });
+        }
+
+        async function loadSchedules() {
+            const res = await fetch('/api/schedules');
+            const schedules = await res.json();
+            const container = document.getElementById('public-schedules');
+            container.innerHTML = schedules.length ? '' : '<p style="text-align:center; grid-column: 1 / -1; color: var(--text-muted);">Найближчих матчів поки не заплановано.</p>';
+            schedules.forEach(s => {
+                container.innerHTML += `<div class="card"><div class="match-teams">${s.homeTeam} <span class="match-vs">vs</span> ${s.awayTeam}</div><div class="score-badge" style="font-weight: normal;">🗓 ${s.matchDate} | ⏰ ${s.matchTime}</div></div>`;
+            });
+        }
+
+        async function loadTeams() {
+            const res = await fetch('/api/teams');
+            const teams = await res.json();
+            const tbody = document.getElementById('public-teams');
+            tbody.innerHTML = '';
+            teams.forEach((t, index) => {
+                const safeImageName = t.name.replace(/\//g, '-');
+                tbody.innerHTML += `
+                    <tr class="table-row">
+                        <td style="padding: 15px; font-weight: bold; color: var(--text-muted);">${index + 1}</td>
+                        <td style="padding: 15px; font-weight: bold; display: flex; align-items: center; gap: 12px;">
+                            <img src="${safeImageName}.png" style="width: 26px; height: 26px; object-fit: contain;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/53/53283.png'" alt="Лого">
+                            ${t.name}
+                        </td>
+                        <td style="padding: 15px;">${t.games}</td>
+                        <td style="padding: 15px;">${t.wins}</td>
+                        <td style="padding: 15px;">${t.draws}</td>
+                        <td style="padding: 15px;">${t.losses}</td>
+                        <td style="padding: 15px; font-weight: bold; color: #3b82f6; font-size: 1.1em;">${t.points}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        loadMatches(); loadPlayers(); loadSchedules(); loadTeams();
+        // --- 7. РЕЄСТРАЦІЯ PWA (SERVICE WORKER) ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ PWA готово! Service Worker зареєстровано.', reg.scope))
+                    .catch(err => console.error('Помилка реєстрації Service Worker:', err));
+            });
+        }
+    </script>
+</body>
+</html>
