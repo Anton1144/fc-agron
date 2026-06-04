@@ -56,30 +56,32 @@ const initialMatches = [
 ];
 
 // НОВЕ: Реальний склад ФК Агрон
-const initialPlayers = [
-    { number: 1, name: 'Андрієшин Роман', position: 'Дата нар.: 02.08.1996' },
-    { number: 2, name: 'Білик Валентин', position: 'Дата нар.: 29.07.1996' },
-    { number: 3, name: 'Ваврик Андрій', position: 'Дата нар.: 28.05.2002' },
-    { number: 4, name: 'Гром\'як Тарас', position: 'Дата нар.: 19.03.1993' },
-    { number: 5, name: 'Кобеля Олександр', position: 'Дата нар.: 28.02.2002' },
-    { number: 6, name: 'Ковалик Віктор', position: 'Дата нар.: 19.10.1984' },
-    { number: 7, name: 'Кохман Ігор', position: 'Дата нар.: 18.06.1997' },
-    { number: 8, name: 'Луцик Руслан', position: 'Дата нар.: 09.04.1996' },
-    { number: 9, name: 'Мазур Руслан', position: 'Дата нар.: 02.10.1991' },
-    { number: 10, name: 'Махінка Денис-Павло', position: 'Дата нар.: 14.03.2003' },
-    { number: 11, name: 'Мостовий Володимир', position: 'Дата нар.: 28.09.2001' },
-    { number: 12, name: 'Олексюк Іван', position: 'Дата нар.: 08.07.1995' },
-    { number: 13, name: 'Онищук Володимир', position: 'Дата нар.: 20.03.2000' },
-    { number: 14, name: 'Понедельнік Олександр', position: 'Дата нар.: 04.06.1999' },
-    { number: 15, name: 'Пришнівський Володимир', position: 'Дата нар.: 26.07.1992' },
-    { number: 16, name: 'Рогаль Іван', position: 'Дата нар.: 20.01.1998' },
-    { number: 17, name: 'Семенець Богдан', position: 'Дата нар.: 27.11.1990' },
-    { number: 18, name: 'Скакун Андрій', position: 'Дата нар.: 13.09.1994' },
-    { number: 19, name: 'Соколовський Юрій', position: 'Дата нар.: 11.04.1995' },
-    { number: 20, name: 'Тяпкін Максим', position: 'Дата нар.: 05.01.2001' },
-    { number: 21, name: 'Федчишин Іван', position: 'Дата нар.: 27.06.2002' },
-    { number: 22, name: 'Щербатюк Євген', position: 'Дата нар.: 20.11.1997' }
-];
+const defaultPlayers = [
+            // Воротарі
+            { number: 1, name: 'Руслан Мазур', position: 'Воротар' },
+            { number: 12, name: 'Іван Рогаль', position: 'Воротар' },
+            // Захисники
+            { number: 2, name: 'Віктор Ковалик', position: 'Захисник' },
+            { number: 3, name: 'Іван Олексюк', position: 'Захисник' },
+            { number: 4, name: 'Андрій Скакун', position: 'Захисник' },
+            { number: 5, name: 'Роман Скородень', position: 'Захисник' },
+            { number: 13, name: 'Юрій Соколовський', position: 'Захисник' },
+            { number: 14, name: 'Дмитро Стриєшин', position: 'Захисник' },
+            { number: 33, name: 'Євген Щербатюк', position: 'Захисник' },
+            // Півзахисники
+            { number: 6, name: 'Ігор Кохман', position: 'Півзахисник' },
+            { number: 7, name: 'Руслан Луцик', position: 'Півзахисник' },
+            { number: 8, name: 'Володимир Онищук', position: 'Півзахисник' },
+            { number: 15, name: 'Станіслав Павлович', position: 'Півзахисник' },
+            { number: 16, name: 'Максим Пежинський', position: 'Півзахисник' },
+            { number: 17, name: 'Олександр Понєдєльнік', position: 'Півзахисник' },
+            { number: 18, name: 'Володимир Пришнівський', position: 'Півзахисник' },
+            { number: 19, name: 'Тарас Семенець', position: 'Півзахисник' },
+            // Нападники
+            { number: 9, name: 'Михайло Войцещук', position: 'Нападник' },
+            { number: 10, name: 'Тарас Громяк', position: 'Нападник' },
+            { number: 11, name: 'Роман Мельник', position: 'Нападник' }
+        ];
 
 async function seedDatabase() {
     try {
@@ -92,7 +94,7 @@ async function seedDatabase() {
         // Додаємо перевірку складу гравців
         const playerCount = await Player.countDocuments();
         if (playerCount === 0) {
-            await Player.insertMany(initialPlayers); 
+            await Player.insertMany(defaultPlayers); 
             console.log('✅ Склад команди успішно додано (22 гравці)!'); 
         }
     } catch (error) {
@@ -161,7 +163,15 @@ app.post('/api/players', async (req, res) => {
         res.status(400).json({ message: err.message });
     }
 });
-
+// Видалення гравця
+app.delete('/api/players/:id', async (req, res) => {
+    try {
+        await Player.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Гравця успішно видалено' });
+    } catch (err) {
+        res.status(500).json({ error: 'Помилка видалення гравця' });
+    }
+});
 
 // ==========================================
 // API ДЛЯ КОМАНД (ТУРНІРНА ТАБЛИЦЯ)

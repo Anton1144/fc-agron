@@ -3,142 +3,454 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель адміністратора - ФК Агрон</title>
+    <title>Панель управління - ФК Агрон</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { display: flex; height: 100vh; background-color: #f1f5f9; color: #334155; }
+        :root {
+            --bg-color: #f1f5f9;
+            --sidebar-bg: #1e2530;
+            --sidebar-active: #2a3342;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --primary: #3b82f6;
+            --danger: #ef4444;
+            --card-bg: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; min-height: 100vh; }
+
+        /* БОКОВЕ МЕНЮ (SIDEBAR) */
+        .sidebar { width: 260px; background-color: var(--sidebar-bg); color: #cbd5e1; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-brand { padding: 24px 20px; font-size: 20px; font-weight: bold; color: white; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #2a3342; }
+        .sidebar-brand img { height: 32px; width: auto; }
         
-        /* Бокове меню */
-        .sidebar { width: 250px; background-color: #1e293b; color: white; display: flex; flex-direction: column; }
-        .sidebar-header { padding: 20px; font-size: 20px; font-weight: bold; color: #3b82f6; text-align: center; border-bottom: 1px solid #334155; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .nav-links { list-style: none; padding: 20px 0; }
-        .nav-links li { padding: 15px 20px; cursor: pointer; transition: 0.3s; }
-        .nav-links li:hover, .nav-links li.active { background-color: #334155; border-left: 4px solid #3b82f6; }
-        .nav-links a { color: white; text-decoration: none; display: block; }
+        .sidebar-menu { list-style: none; padding: 15px 0; flex: 1; }
+        .menu-item { padding: 14px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px; font-weight: 500; transition: 0.2s; border-left: 4px solid transparent; }
+        .menu-item:hover { background-color: rgba(255,255,255,0.03); color: white; }
+        .menu-item.active { background-color: var(--sidebar-active); color: white; border-left-color: var(--primary); }
+
+        /* ГОЛОВНИЙ КОНТЕНТ */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         
-        /* Основна частина */
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-        .topbar { background-color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .logout-btn { color: #ef4444; text-decoration: none; font-weight: bold; }
+        /* ШАПКА (HEADER) */
+        header { background: white; padding: 18px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        header h1 { font-size: 22px; font-weight: 600; color: #1e293b; }
+        .user-profile { display: flex; align-items: center; gap: 15px; font-size: 15px; }
+        .logout-btn { color: var(--danger); text-decoration: none; font-weight: bold; margin-left: 5px; }
+
+        /* КОНТЕНЕР ДЛЯ ВКЛАДОК */
+        .content-body { padding: 30px; flex: 1; overflow-y: auto; }
+        .admin-section { display: none; animation: fadeIn 0.3s ease; }
+        .admin-section.active-section { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* КАРТКИ ТА ФОРМИ */
+        .card { background: var(--card-bg); padding: 25px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 25px; }
+        .card h3 { font-size: 16px; font-weight: 600; margin-bottom: 15px; color: #1e293b; }
         
-        .content-area { padding: 30px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .form-group { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
-        input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 5px; flex: 1; min-width: 150px; }
-        .btn-primary { background-color: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-primary:hover { background-color: #2563eb; }
+        .form-row { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; }
         
-        .match-card { display: flex; justify-content: space-between; padding: 15px; background-color: #f8fafc; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid #3b82f6; align-items: center; }
-        .btn-delete { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 16px; }
-        .mt-20 { margin-top: 20px; }
+        input, select { width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; color: var(--text-main); outline: none; transition: 0.2s; background: white; }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        select { cursor: pointer; }
+        
+        .btn { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+        .btn:hover { background: #2563eb; }
+
+        /* СПИСКИ ЕЛЕМЕНТІВ */
+        .data-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+        .list-item { background: #fff; padding: 16px 20px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .list-item-info { font-size: 15px; font-weight: 500; }
+        .list-item-info span { color: var(--text-muted); font-size: 14px; font-weight: normal; margin-left: 5px; }
+        
+        .delete-btn { background: none; border: none; color: #cbd5e1; font-size: 20px; cursor: pointer; transition: 0.2s; padding: 0 5px; }
+        .delete-btn:hover { color: var(--danger); transform: scale(1.1); }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <img src="logo.png" alt="" style="height: 30px;" onerror="this.style.display='none'"> 
-            ФК Агрон
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span>ФК Агрон</span>
         </div>
-        <ul class="nav-links">
-            <li class="active"><a href="#" id="nav-matches">⚽ Матчі</a></li>
-            <li><a href="#" id="nav-players">🏃 Склад команди</a></li>
-            <li><a href="#" id="nav-teams">🏆 Турнірна таблиця</a></li>
-            <li><a href="#" id="nav-schedules">📅 Розклад матчів</a></li>
+        <ul class="sidebar-menu">
+            <li class="menu-item" data-target="matches-tab" data-title="Управління останніми матчами">⚽️ Матчі</li>
+            <li class="menu-item" data-target="players-tab" data-title="Склад команди (Ростер)">🏃‍♂️ Склад команди</li>
+            <li class="menu-item active" data-target="standings-tab" data-title="Турнірна таблиця">🏆 Турнірна таблиця</li>
+            <li class="menu-item" data-target="teams-tab" data-title="Управління командами ліги">🛡 Команди</li>
+            <li class="menu-item" data-target="schedules-tab" data-title="Розклад майбутніх матчів">📅 Розклад матчів</li>
         </ul>
-    </div>
+    </aside>
 
-    <div class="main-content">
-        <div class="topbar">
-            <h2 id="page-title">Управління матчами</h2>
-            <div>
-                <span>Адміністратор | </span>
-                <a href="/login.html" class="logout-btn">Вийти 🚪</a>
+    <div class="main-wrapper">
+        <header>
+            <h1 id="page-title">Турнірна таблиця</h1>
+            <div class="user-profile">
+                <span>Адміністратор</span>
+                <span style="color: #cbd5e1;">|</span>
+                <a href="/logout" class="logout-btn">Вийти 🚪</a>
             </div>
-        </div>
+        </header>
 
-        <div class="content-area">
-            
-            <div id="matches-section">
+        <main class="content-body">
+
+            <div id="matches-tab" class="admin-section">
                 <div class="card">
-                    <h3>Додати результат матчу</h3>
-                    <form id="matchForm">
-                        <div class="form-group">
-                            <input type="text" id="homeTeam" placeholder="Господарі" required>
-                            <input type="text" id="awayTeam" placeholder="Гості" required>
-                            <input type="text" id="score" placeholder="Рахунок (напр. 2:1)" required>
-                        </div>
-                        <button type="submit" class="btn-primary">Зберегти матч</button>
-                    </form>
+                    <h3>Додати зіграний матч</h3>
+                    <div class="form-row">
+                        <select id="matchHome" style="flex: 1;">
+                            <option value="" disabled selected>Оберіть господарів...</option>
+                        </select>
+                        <select id="matchAway" style="flex: 1;">
+                            <option value="" disabled selected>Оберіть гостей...</option>
+                        </select>
+                        
+                        <input type="text" id="matchScore" placeholder="Рахунок (напр. 2:1)" style="max-width: 150px;">
+                        <button class="btn" onclick="addMatch()">Зберегти матч</button>
+                    </div>
                 </div>
-                <div class="card mt-20">
+                <div class="card">
                     <h3>Останні зіграні матчі</h3>
-                    <div id="matchesList"></div>
+                    <ul id="admin-matches-list" class="data-list"></ul>
                 </div>
             </div>
 
-            <div id="players-section" style="display: none;">
+            <div id="players-tab" class="admin-section">
                 <div class="card">
-                    <h3>Додати гравця</h3>
-                    <form id="playerForm">
-                        <div class="form-group">
-                            <input type="number" id="playerNumber" placeholder="Номер" required>
-                            <input type="text" id="playerName" placeholder="Прізвище та Ім'я" required>
-                            <input type="text" id="playerPosition" placeholder="Позиція (напр. Нападник)" required>
-                        </div>
-                        <button type="submit" class="btn-primary">Зберегти гравця</button>
-                    </form>
+                    <h3>Додати гравця до складу</h3>
+                    <div class="form-row">
+                        <input type="number" id="playerNum" placeholder="№" style="max-width: 90px;">
+                        <input type="text" id="playerName" placeholder="Прізвище та ім'я гравця">
+                        <select id="playerPos">
+                            <option value="Воротар">Воротар</option>
+                            <option value="Захисник">Захисник</option>
+                            <option value="Півзахисник">Півзахисник</option>
+                            <option value="Нападник">Нападник</option>
+                        </select>
+                        <button class="btn" onclick="addPlayer()">Зберегти гравця</button>
+                    </div>
                 </div>
-                <div class="card mt-20">
+                <div class="card">
                     <h3>Поточний склад команди</h3>
-                    <div id="playersList"></div>
+                    <ul id="admin-players-list" class="data-list"></ul>
                 </div>
             </div>
 
-            <div id="teams-section" style="display: none;">
+            <div id="standings-tab" class="admin-section active-section">
                 <div class="card">
-                    <h3>Додати команду в таблицю</h3>
-                    <form id="teamForm">
-                        <div class="form-group">
-                            <input type="text" id="teamName" placeholder="Назва команди" required>
-                            <input type="number" id="teamGames" placeholder="Ігри" required>
-                            <input type="number" id="teamWins" placeholder="В" required>
-                            <input type="number" id="teamDraws" placeholder="Н" required>
-                            <input type="number" id="teamLosses" placeholder="П" required>
-                            <input type="number" id="teamPoints" placeholder="Очки" required>
-                        </div>
-                        <button type="submit" class="btn-primary">Зберегти команду</button>
-                    </form>
+                    <h3>Додати команду в таблицю вручну</h3>
+                    <div class="form-row">
+                        <input type="text" id="teamName" placeholder="Назва команди" style="flex: 2;">
+                        <input type="number" id="teamGames" placeholder="Ігри">
+                        <input type="number" id="teamWins" placeholder="В">
+                        <input type="number" id="teamDraws" placeholder="Н">
+                        <input type="number" id="teamLosses" placeholder="П">
+                        <input type="number" id="teamPoints" placeholder="Очки">
+                        <button class="btn" onclick="addTeam()">Зберегти</button>
+                    </div>
                 </div>
-                <div class="card mt-20">
+                <div class="card">
                     <h3>Поточне положення команд</h3>
-                    <div id="teamsList"></div>
+                    <ul id="admin-teams-list" class="data-list"></ul>
                 </div>
             </div>
 
-            <div id="schedules-section" style="display: none;">
+            <div id="teams-tab" class="admin-section">
+                <div class="card" style="border-top: 4px solid #10b981;">
+                    <h3>Реєстрація нової команди в лізі</h3>
+                    <div class="form-row">
+                        <input type="text" id="clubName" placeholder="Назва клубу (напр. ФК Дністер)" style="flex: 2;">
+                        <button class="btn" onclick="addClub()" style="background-color: #10b981;">Зареєструвати клуб</button>
+                    </div>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-top: 10px;">* Команда автоматично додасться до турнірної таблиці з нульовою статистикою.</p>
+                </div>
                 <div class="card">
-                    <h3>Додати майбутній матч</h3>
-                    <form id="scheduleForm">
-                        <div class="form-group">
-                            <input type="text" id="schHome" placeholder="Господарі" required>
-                            <input type="text" id="schAway" placeholder="Гості" required>
-                            <input type="text" id="schDate" placeholder="Дата (напр. 30 Травня)" required>
-                            <input type="text" id="schTime" placeholder="Час (напр. 17:00)" required>
-                        </div>
-                        <button type="submit" class="btn-primary">Зберегти в розклад</button>
-                    </form>
-                </div>
-                <div class="card mt-20">
-                    <h3>Заплановані ігри</h3>
-                    <div id="schedulesList"></div>
+                    <h3>Зареєстровані клуби ліги</h3>
+                    <ul id="admin-clubs-list" class="data-list"></ul>
                 </div>
             </div>
 
-        </div>
+            <div id="schedules-tab" class="admin-section">
+                <div class="card">
+                    <h3>Запланувати майбутній матч</h3>
+                    <div class="form-row">
+                        <select id="schedHome" style="flex: 1;">
+                            <option value="" disabled selected>Оберіть господарів...</option>
+                        </select>
+                        <select id="schedAway" style="flex: 1;">
+                            <option value="" disabled selected>Оберіть гостей...</option>
+                        </select>
+                        
+                        <input type="date" id="schedDate">
+                        <input type="time" id="schedTime">
+                        <button class="btn" onclick="addSchedule()">Запланувати</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Розклад найближчих турів</h3>
+                    <ul id="admin-schedules-list" class="data-list"></ul>
+                </div>
+            </div>
+
+        </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="script.js"></script>
+    <script>
+        // --- ПЕРЕМИКАННЯ ВКЛАДОК ---
+        const menuItems = document.querySelectorAll('.menu-item');
+        const sections = document.querySelectorAll('.admin-section');
+        const pageTitle = document.getElementById('page-title');
+
+        menuItems.forEach(item => {
+            item.addEventListener('click', () => {
+                menuItems.forEach(i => i.classList.remove('active'));
+                sections.forEach(s => s.classList.remove('active-section'));
+
+                item.classList.add('active');
+                const target = item.getAttribute('data-target');
+                document.getElementById(target).classList.add('active-section');
+                pageTitle.innerText = item.getAttribute('data-title');
+            });
+        });
+
+        // --- НОВА ФУНКЦІЯ: ОНОВЛЕННЯ СЕЛЕКТОРІВ КОМАНД ---
+        // Ця функція бере список команд з бази і вставляє їх у випадаючі списки
+        function updateTeamSelectors(teams) {
+            const selectorIds = ['matchHome', 'matchAway', 'schedHome', 'schedAway'];
+            
+            selectorIds.forEach(id => {
+                const selectElement = document.getElementById(id);
+                if (!selectElement) return;
+                
+                const currentValue = selectElement.value; // Запам'ятовуємо, що було обрано
+                
+                // Скидаємо список
+                selectElement.innerHTML = '<option value="" disabled selected>Оберіть команду...</option>';
+                
+                // Заповнюємо новими командами
+                teams.forEach(t => {
+                    selectElement.innerHTML += `<option value="${t.name}">${t.name}</option>`;
+                });
+                
+                // Повертаємо вибір, якщо він там був
+                if (currentValue) selectElement.value = currentValue;
+            });
+        }
+
+        // --- ЛОГІКА ТУРНІРНОЇ ТАБЛИЦІ ---
+        async function loadTeams() {
+            const res = await fetch('/api/teams');
+            const teams = await res.json();
+            const list = document.getElementById('admin-teams-list');
+            list.innerHTML = '';
+            
+            // Одразу оновлюємо селектори у вкладках Матчі та Розклад!
+            updateTeamSelectors(teams);
+
+            teams.forEach((t, i) => {
+                list.innerHTML += `
+                    <li class="list-item">
+                        <div class="list-item-info">
+                            <strong>${i + 1}. ${t.name}</strong> 
+                            <span>(І: ${t.games}, В: ${t.wins}, Н: ${t.draws}, П: ${t.losses})</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:20px;">
+                            <span style="font-weight:bold;">${t.points} Очок</span>
+                            <button class="delete-btn" onclick="deleteTeam('${t._id}')">❌</button>
+                        </div>
+                    </li>`;
+            });
+        }
+
+        async function addTeam() {
+            const name = document.getElementById('teamName').value;
+            const games = document.getElementById('teamGames').value;
+            const wins = document.getElementById('teamWins').value;
+            const draws = document.getElementById('teamDraws').value;
+            const losses = document.getElementById('teamLosses').value;
+            const points = document.getElementById('teamPoints').value;
+
+            if(!name) return alert('Введіть назву команди');
+            await fetch('/api/teams', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name, games, wins, draws, losses, points})
+            });
+            loadTeams();
+            loadClubs();
+        }
+
+        async function deleteTeam(id) {
+            if(confirm('Видалити команду з таблиці?')) {
+                await fetch(`/api/teams/${id}`, { method: 'DELETE' });
+                loadTeams();
+                loadClubs();
+            }
+        }
+
+        // --- ЛОГІКА СКЛАДУ КОМАНДИ ---
+        async function loadPlayers() {
+            const res = await fetch('/api/players');
+            const players = await res.json();
+            const list = document.getElementById('admin-players-list');
+            list.innerHTML = '';
+            players.forEach(p => {
+                list.innerHTML += `
+                    <li class="list-item">
+                        <div class="list-item-info"><strong>#${p.number || '-'}</strong> ${p.name} <span>(${p.position})</span></div>
+                        <button class="delete-btn" onclick="deletePlayer('${p._id}')">❌</button>
+                    </li>`;
+            });
+        }
+
+        async function addPlayer() {
+            const number = document.getElementById('playerNum').value;
+            const name = document.getElementById('playerName').value;
+            const position = document.getElementById('playerPos').value;
+
+            if(!name) return alert('Заповніть ім\'я');
+            await fetch('/api/players', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({number, name, position})
+            });
+            loadPlayers();
+        }
+
+        async function deletePlayer(id) {
+            if(confirm('Видалити гравця зі складу?')) {
+                await fetch(`/api/players/${id}`, { method: 'DELETE' });
+                loadPlayers();
+            }
+        }
+
+        // --- ЛОГІКА ЗІГРАНИХ МАТЧІВ ---
+        async function loadMatches() {
+            const res = await fetch('/api/matches');
+            const matches = await res.json();
+            const list = document.getElementById('admin-matches-list');
+            list.innerHTML = '';
+            matches.forEach(m => {
+                list.innerHTML += `
+                    <li class="list-item">
+                        <div class="list-item-info">${m.homeTeam} <span>vs</span> ${m.awayTeam}</div>
+                        <div style="display:flex; align-items:center; gap:20px;">
+                            <span style="font-weight:bold; color:var(--primary);">${m.score}</span>
+                            <button class="delete-btn" onclick="deleteMatch('${m._id}')">❌</button>
+                        </div>
+                    </li>`;
+            });
+        }
+
+        async function addMatch() {
+            const homeTeam = document.getElementById('matchHome').value;
+            const awayTeam = document.getElementById('matchAway').value;
+            const score = document.getElementById('matchScore').value;
+
+            if(!homeTeam || !awayTeam || !score) return alert('Оберіть команди та введіть рахунок!');
+            await fetch('/api/matches', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({homeTeam, awayTeam, score})
+            });
+            loadMatches();
+        }
+
+        async function deleteMatch(id) {
+            if(confirm('Видалити результат матчу?')) {
+                await fetch(`/api/matches/${id}`, { method: 'DELETE' });
+                loadMatches();
+            }
+        }
+
+        // --- ЛОГІКА РОЗКЛАДУ МАЙБУТНІХ МАТЧІВ ---
+        async function loadSchedules() {
+            const res = await fetch('/api/schedules');
+            const schedules = await res.json();
+            const list = document.getElementById('admin-schedules-list');
+            list.innerHTML = '';
+            schedules.forEach(s => {
+                list.innerHTML += `
+                    <li class="list-item">
+                        <div class="list-item-info">${s.homeTeam} <span>vs</span> ${s.awayTeam}</div>
+                        <div style="display:flex; align-items:center; gap:20px;">
+                            <span style="font-size:14px; color:var(--text-muted);">${s.matchDate} o ${s.matchTime}</span>
+                            <button class="delete-btn" onclick="deleteSchedule('${s._id}')">❌</button>
+                        </div>
+                    </li>`;
+            });
+        }
+
+        async function addSchedule() {
+            const homeTeam = document.getElementById('schedHome').value;
+            const awayTeam = document.getElementById('schedAway').value;
+            const matchDate = document.getElementById('schedDate').value;
+            const matchTime = document.getElementById('schedTime').value;
+
+            if(!homeTeam || !awayTeam || !matchDate || !matchTime) return alert('Заповніть всі дані розкладу!');
+            await fetch('/api/schedules', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({homeTeam, awayTeam, matchDate, matchTime})
+            });
+            loadSchedules();
+        }
+
+        async function deleteSchedule(id) {
+            if(confirm('Видалити запланований матч?')) {
+                await fetch(`/api/schedules/${id}`, { method: 'DELETE' });
+                loadSchedules();
+            }
+        }
+
+        // --- ЛОГІКА КОМАНД (ВКЛАДКА 4) ---
+        async function loadClubs() {
+            const res = await fetch('/api/teams');
+            const teams = await res.json();
+            const list = document.getElementById('admin-clubs-list');
+            list.innerHTML = '';
+            
+            if(teams.length === 0) {
+                list.innerHTML = '<p style="color:var(--text-muted); font-size:14px; padding: 10px 0;">Команд поки немає.</p>';
+                return;
+            }
+            
+            teams.forEach(t => {
+                list.innerHTML += `
+                    <li class="list-item" style="border-left-color: #10b981;">
+                        <div class="list-item-info">🛡 <strong>${t.name}</strong></div>
+                        <button class="delete-btn" onclick="deleteClub('${t._id}')">❌</button>
+                    </li>`;
+            });
+        }
+
+        async function addClub() {
+            const name = document.getElementById('clubName').value;
+            
+            if(!name) return alert('Введіть назву клубу');
+            
+            await fetch('/api/teams', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name: name, games: 0, wins: 0, draws: 0, losses: 0, points: 0 })
+            });
+            
+            document.getElementById('clubName').value = '';
+            
+            loadClubs();
+            loadTeams(); 
+        }
+
+        async function deleteClub(id) {
+            if(confirm('Видалити цю команду? (Вона також зникне з турнірної таблиці та селекторів)')) {
+                await fetch(`/api/teams/${id}`, { method: 'DELETE' });
+                loadClubs();
+                loadTeams(); 
+            }
+        }
+
+        // --- СТАРТ ЗАВАНТАЖЕННЯ ---
+        loadTeams(); loadPlayers(); loadMatches(); loadSchedules(); loadClubs();
+    </script>
 </body>
 </html>

@@ -188,16 +188,17 @@
             <div id="public-matches" class="grid"></div>
         </div>
 
-        <div id="players" class="page-section">
-            <h2 class="section-title"><span>Наш ростер</span></h2>
-            
-            <div style="text-align: center; margin-bottom: 30px;">
-                <input type="text" id="playerSearch" placeholder="🔍 Пошук гравця за прізвищем..." 
-                       style="padding: 12px 20px; width: 100%; max-width: 400px; border-radius: 25px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); font-size: 16px; outline: none; box-shadow: var(--card-shadow); transition: 0.3s;">
-            </div>
+       <div id="players" class="page-section">
+    <h2 class="section-title"><span>Наш ростер</span></h2>
 
-            <div id="public-players" class="grid"></div>
-        </div>
+    <div style="text-align: center; margin-bottom: 30px;">
+        <input type="text" id="searchInput" placeholder="🔍 Пошук гравця за прізвищем..." 
+               style="padding: 12px 20px; width: 100%; max-width: 400px; border-radius: 25px; border: 2px solid #e2e8f0; outline: none; font-size: 16px;">
+    </div>
+
+    <div id="public-players" class="grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+    </div>
+</div>
 
         <div id="standings" class="page-section">
             <h2 class="section-title"><span>Турнірна таблиця ліги</span></h2>
@@ -291,29 +292,80 @@
         });
 
         // --- 5. ЖИВИЙ ПОШУК ТА ЗАВАНТАЖЕННЯ ГРАВЦІВ ---
-        let allPlayers = []; 
+       // ================= ЛОГІКА ГРАВЦІВ ТА ПОШУКУ =================
 
-        async function loadPlayers() {
-            const res = await fetch('/api/players');
-            allPlayers = await res.json();
-            renderPlayers(allPlayers); 
+        // 1. Глобальна змінна, яка тримає всіх гравців у пам'яті браузера для пошуку
+        let allPlayers = [];
+
+        // 2. Функція завантаження з бази
+        async function loadPublicPlayers() {
+            try {
+                const res = await fetch('/api/players');
+                allPlayers = await res.json(); // Зберігаємо гравців у змінну
+                renderPlayers(allPlayers);     // Малюємо всіх на екрані
+            } catch (err) {
+                console.error("Помилка завантаження гравців:", err);
+            }
         }
 
-        function renderPlayers(playersToRender) {
-            const container = document.getElementById('public-players');
-            container.innerHTML = playersToRender.length ? '' : '<p style="text-align:center; grid-column: 1 / -1; color: var(--text-muted);">Гравців не знайдено.</p>';
-            
-            playersToRender.forEach(p => {
-                container.innerHTML += `<div class="card"><span class="player-number">#${p.number}</span><div class="player-name">${p.name}</div><div class="player-pos">${p.position}</div></div>`;
+        // 3. Логіка живого пошуку
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                // Фільтруємо масив allPlayers за введеними літерами
+                const filtered = allPlayers.filter(p => p.name.toLowerCase().includes(term));
+                renderPlayers(filtered); // Перемальовуємо тільки знайдених
             });
         }
 
-        document.getElementById('playerSearch').addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const filteredPlayers = allPlayers.filter(p => p.name.toLowerCase().includes(searchTerm));
-            renderPlayers(filteredPlayers); 
-        });
+        // 4. Функція малювання (з розбивкою на категорії та фото)
+        function renderPlayers(playersToRender) {
+            const container = document.getElementById('public-players'); 
+            if (!container) return;
+            container.innerHTML = ''; // Очищаємо екран перед новим малюванням
 
+            if (playersToRender.length === 0) {
+                container.innerHTML = '<p style="text-align:center; grid-column: 1/-1; padding: 20px;">Гравців не знайдено.</p>';
+                return;
+            }
+
+            const categories = [
+                { title: 'Воротарі', role: 'Воротар' },
+                { title: 'Захисники', role: 'Захисник' },
+                { title: 'Півзахисники', role: 'Півзахисник' },
+                { title: 'Нападники', role: 'Нападник' }
+            ];
+
+            categories.forEach(category => {
+                const posPlayers = playersToRender.filter(p => p.position === category.role);
+                
+                if (posPlayers.length > 0) {
+                    container.innerHTML += `
+                        <h3 style="grid-column: 1 / -1; margin-top: 35px; margin-bottom: 15px; font-size: 24px; color: var(--text-main); border-bottom: 3px solid #3b82f6; padding-bottom: 10px; text-transform: uppercase;">
+                            ${category.title}
+                        </h3>
+                    `;
+                    
+                    posPlayers.forEach(p => {
+                        const photoUrl = `players/${p.name}.jpg`;
+                        container.innerHTML += `
+                            <div class="card" style="display: flex; flex-direction: column; align-items: center; padding: 25px 15px; border-top: 4px solid #3b82f6; border-radius: 8px;">
+                                <img src="${photoUrl}" 
+                                     alt="${p.name}" 
+                                     onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'" 
+                                     style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; border: 3px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                                <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px; text-align: center;">${p.name}</div>
+                                <div style="background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; padding: 4px 15px; border-radius: 20px; font-size: 13px;">${p.position}</div>
+                            </div>
+                        `;
+                    });
+                }
+            });
+        }
+
+        // Обов'язково викликаємо завантаження при старті!
+        loadPublicPlayers();
         // --- 6. ЗАВАНТАЖЕННЯ ІНШИХ ДАНИХ З БД ---
         async function loadMatches() {
             const res = await fetch('/api/matches');
