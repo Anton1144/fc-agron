@@ -164,6 +164,28 @@
                 </div>
             </div>
         </div>
+        <div class="club-details" style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
+    <h3 style="color: var(--accent); margin-bottom: 15px;">Довідка про клуб</h3>
+    <ul style="list-style-type: none; padding-left: 0; line-height: 1.8;">
+        <li><strong>📅 Рік заснування:</strong> 2016</li>
+        <li><strong>🔴 Кольори клубу:</strong> червоні</li>
+        <li><strong>👔 Президент:</strong> Березовський Юрій Романович</li>
+        <li><strong>⚽ Головний тренер:</strong> Богородіченко Сергій Анатолійович</li>
+    </ul>
+
+    <h3 style="color: var(--accent); margin-top: 20px; margin-bottom: 10px;">🏆 Досягнення</h3>
+    <ul style="list-style-type: none; padding-left: 0; line-height: 1.8;">
+        <li>🥇 <strong>Чемпіон Тернопільської області:</strong> 2017, 2018, 2019, 2021, 2022, 2023, 2024</li>
+        <li>🏆 <strong>Володар Кубка області:</strong> 2019, 2021, 2023, 2024</li>
+        <li>⚡ <strong>Володар Суперкубка області:</strong> 2020, 2022, 2023, 2024</li>
+    </ul>
+
+    <div class="social-links" style="margin-top: 20px;">
+        <a href="https://uk-ua.facebook.com/groups/fcagron/" target="_blank" style="margin-right: 15px; color: var(--accent); text-decoration: none;">📘 Facebook</a>
+        <a href="https://www.instagram.com/fc_agron/" target="_blank" style="margin-right: 15px; color: var(--accent); text-decoration: none;">📸 Instagram</a>
+        <a href="https://www.youtube.com/channel/UC0WlK6asPswG8zLJj2UU8ow" target="_blank" style="color: var(--accent); text-decoration: none;">▶️ YouTube</a>
+    </div>
+</div>
 
         <div id="stadium" class="page-section">
             <h2 class="section-title"><span>Наша домашня арена</span></h2>
@@ -259,7 +281,7 @@
         function initStadiumMap() {
             if (mapInitialized) return; 
             
-            const map = L.map('stadium-map').setView([49.5298, 25.6385], 13);
+            const map = L.map('stadium-map').setView([49.519474205872804, 25.655367142006085], 13);
             
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
